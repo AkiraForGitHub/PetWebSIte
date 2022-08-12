@@ -1,0 +1,133 @@
+﻿@section Styles{
+    <link rel="stylesheet" href="~/css/AaronCSS/index.css" />
+    <style>
+        #bread:visited {
+            color: red;
+        }
+    </style>
+}
+    <div id="det" v-cloak>
+        <div>
+            <!-- 餐廳照片 -->
+            <div class="container">
+                <div class="row">
+                    <div id="bgImgDiv">
+                        <img :src="`/images/Restaurant/${restPhoto}`" id="bgImgO">
+                        <div class="container" style="color: #000;">
+                            <h1 class="display-3"><strong>{{restName}}</strong></h1>
+                            <p style="text-indent:1rem;">
+                                {{restIndurtion}}
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <!--麵包屑-->
+            <div class="container">
+                <div class="row">
+                    <nav aria-label="breadcrumb" style="--bs-breadcrumb-divider: url(&#34;data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='8' height='8'%3E%3Cpath d='M2.5 0L1 1.5 3.5 4 1 6.5 2.5 8l4-4-4-4z' fill='currentColor'/%3E%3C/svg%3E&#34;);">
+                        <ol class="breadcrumb">
+                            <li class="breadcrumb-item"><a href="~/Home/Index" style="text-decoration:none;">首頁</a></li>
+                            <li class="breadcrumb-item">
+                                <a href="~/Restaurants/Restaurant"
+                               style="text-decoration:none;">寵物友善餐廳</a>
+                            </li>
+                            <li class="breadcrumb-item">
+                                <a :href="`/Restaurants/RestaurantDetails/${restID}`" id="bread"
+                               style="text-decoration:none;">{{restName}}</a>
+                            </li>
+                        </ol>
+                    </nav>
+                </div>
+            </div>
+            <div class="container d-flex justify-content-end">
+                <div class="row">
+                    <div class="col">
+                        <a :href="restReverse" title="按我按我" class="btn btn-outline-primary ms-1" style="border-radius: 20px;color: red;">前往預約</a>
+                    </div>
+                </div>
+            </div>
+            <!--熱門文章-->
+            <div class="container mt-2" >
+                <div class="row">
+                    <div class="col" style="padding: 15px;">
+                        <h3 class="text-danger"><strong>好評文分享:</strong></h3>
+                        <div v-for="(item,index) in restFromID">
+                            <div class="accordion mb-2" id="accordionPanelsStayOpenExample">
+                                <div class="accordion-item" >
+                                    <h2 class="accordion-header" id="panelsStayOpen-headingOne">
+                                        <button class="accordion-button bg-primary text-light" type="button" data-bs-toggle="collapse" data-bs-target="#panelsStayOpen-collapseOne" aria-expanded="true" aria-controls="panelsStayOpen-collapseOne" style="font-size: 20px;">
+                                            <span>{{item.title}}</span>
+                                        </button>
+                                    </h2>
+                                    <div id="panelsStayOpen-collapseOne" class="accordion-collapse collapse show" aria-labelledby="panelsStayOpen-headingOne">
+                                        <div class="accordion-body" style="text-indent: 1rem;">
+                                            <b style="color: olivedrab;">{{item.contents}}</b>
+                                            <div class=" d-flex justify-content-end">
+                                                <a :href="item.fromPlace" class="btn btn-outline-secondary" style="border: 0px;border-radius: 10px;">點我看更多...</a>
+                                            </div>
+                                        </div>
+                                        
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    </div>
+    <!-- FaceBook -->
+    <div class="container">
+        <div class="row">
+            <div class="col">
+                <div id="fb" class="fb-comments" data-href="@Context.Request.Scheme://@Context.Request.Host/restaurants/restaurantdetails/@ViewBag.Id" data-width="100%" data-numposts="5"></div>
+                <div id="fb-root"></div>
+            </div>
+        </div>
+    </div>
+    @section Scripts{
+    <script>
+
+        var vm = new Vue({
+            data: {
+                restID: '',
+                restFromID: [],
+                restName: '',
+                restPhoto: '',
+                restIndurtion: '',
+                restReverse: ''
+
+
+            },
+            methods: {
+            },
+            mounted: function() {
+                let that = this;
+                var urlStr = window.location.href
+                var index = urlStr.lastIndexOf('/')
+                var str = urlStr.substring(index + 1, urlStr.length)
+                that.restID = str;
+                let url = `/api/RestaurantsApi/Details/rawdata/${that.restID}`
+                axios.get(url)
+                    .then(res => {
+                        console.log(res)
+                        that.restFromID = res.data;
+                        this.restID = res.data[0].restID;
+                        that.restName =res.data[0].restName;
+                        that.restPhoto = res.data[0].restPhotoPath;
+                        that.restIndurtion = res.data[0].restIntroduction;
+                        that.restReverse = res.data[0].restReserve;
+                    })
+                    .catch(err => {
+                        console.error(err);
+                    })
+
+            }
+        });
+        vm.$mount('#det');
+
+    </script>
+
+}

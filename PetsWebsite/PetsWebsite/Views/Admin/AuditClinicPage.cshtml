@@ -1,0 +1,193 @@
+﻿@*審核診所頁面*@
+<div class="d-flex align-items-center mt-3 justify-content-center">
+    <h2 class="mb-0 d-inline-block"><strong>審核診所</strong></h2>
+</div>
+<div class="container">
+    <div class="row">
+        <nav aria-label="breadcrumb">
+            <ol class="breadcrumb my-2 justify-content-center">
+                <li class="breadcrumb-item">
+                    <a href="~/Admin/AuditPage" style="text-decoration:none;">待審物件</a>
+                </li>
+                <li class="breadcrumb-item">
+                    <a>開始審核診所</a>
+                </li>
+            </ol>
+        </nav>
+    </div>
+</div>
+<section id="auditClinic">
+    <div class="contanier mt-4">
+        <form id="auditClinicForm">
+            <div class="row justify-content-center" style="height: 1200px;">
+                <div class="col col-6">
+                    <div class="row g-3 bg-light rounded mb-3">
+                        <div class="col col-12">
+                            <label for="ClinicId" class="form-label">診所ID: </label>
+                            <input type="text" class="form-control" v-bind:value="auditData.clinicId" id="ClinicId" name="ClinicId" readonly>
+                        </div>
+                        <div class="col col-6">
+                            <label for="ClinicName" class="form-label">診所名稱: </label>
+                            <input type="text" class="form-control" v-bind:value="auditData.clinicName" id="ClinicName" name="ClinicName" disabled>
+                        </div>
+                        <div class="col col-3">
+                            <label for="Phone" class="form-label">連絡電話: </label>
+                            <input type="text" class="form-control" v-bind:value="auditData.phone" id="Phone" name="Phone" disabled>
+                        </div>
+                        <div class="col col-3">
+                            <label for="Emergency" class="form-label">是否提供急診服務: </label>
+                            <input type="text" class="form-control" v-bind:value="auditData.emergency == true? '是' : '否'" id="Emergency" name="Emergency" disabled>
+                        </div>
+                        <div class="col col-6">
+                            <label for="City">所在城市: </label>
+                            <input type="text" class="form-control" v-bind:value="auditData.city" id="City" name="City" disabled>
+                        </div>
+                        <div class="col col-6 was-validated">
+                            <label for="Region">所在區域: </label>
+                            <input type="text" class="form-control" v-bind:value="auditData.region" id="Region" name="Region" disabled>
+                        </div>
+                        <div class="col col-12">
+                            <label for="Address" class="form-label">診所地址: </label>
+                            <input type="text" class="form-control" v-bind:value="auditData.address" id="Address" name="Address" disabled>
+                        </div>
+                        <div class="col col-12">
+                            <label for="ClinicMap" class="form-label">診所googleMap網址: </label>
+                            <input type="text" class="form-control" v-model="auditData.clinicMap" id="ClinicMap" name="ClinicMap" disabled>
+                        </div>
+                        <div class="col col-12">
+                            <label for="Service">診所提供服務項目: </label>
+                            <textarea class="form-control" v-model="auditData.service" id="Service" name="Service" rows="3" disabled></textarea>
+                        </div>
+                        <div class="col col-12">
+                            <label for="Describe">診所簡述: </label>
+                            <textarea class="form-control" id="Describe" name="Describe" rows="3" disabled>{{auditData.describe}}</textarea>
+                        </div>
+                        <div class="col col-12">
+                            <label class="d-block" for="Photo">圖片</label>
+                            <div class="mb-3">
+                                <img id="pic" style="width: 30%; height: 30%" v-bind:src="'/images/Clinic/' + auditData.photoPath" />
+                            </div>
+                        </div>
+                        <hr class="mb-0">
+                        <div class="col col-12">
+                            <label class="d-block" for="Photo">修改建議: </label>
+                            <div class="mb-3">
+                                <textarea type="text" class="form-control text-danger" id="AuditResult" name="AuditResult" rows="3">{{auditData.auditResult}}</textarea>
+                            </div>
+                        </div>
+                        <div class="col col-6 d-flex my-3 justify-content-end">
+                            <button class="btn btn-warning" type="submit">提出修改建議</button>
+                        </div>
+                        <div class="col col-6 d-flex my-3 justify-content-start">
+                            <a class="btn btn-info" onclick="publishClinic()">允許上架</a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </form>
+    </div>
+</section>
+
+@section Scripts{
+    <script>
+        var vm = new Vue({
+            data: {
+                auditData: []
+            },
+            mounted: function() {
+                this.getCurrentAuditClinic();
+            },
+            methods: {
+                getCurrentAuditClinic: function() {
+                    $.ajax({
+                        url: '/Admin/GetCurrentAuditClinic',
+                        type: 'GET'
+                    })
+                        .done(function(res) {
+                            vm.auditData = res;
+                        }).fail(function(err) {
+                            console.log("getCurrentAuditClinicErr: ", err);
+                        })
+                }
+            }
+        }).$mount('#auditClinic')
+
+        $("#auditClinicForm").submit(function(e) {
+            e.preventDefault();
+            var formdata = new FormData(this);
+            $.ajax({
+                url: '/Admin/SaveClinicAuditSuggest',
+                type: 'POST',
+                data: formdata,
+                async: false,
+                cache: false,
+                contentType: false,
+                enctype: 'multipart/form-data',
+                processData: false
+            }).done(function(res) {
+                console.log(res)
+                if (res) {
+                    ActionSuccess();
+                } else {
+                    ActionFalse();
+                }
+            }).fail(function(err) {
+                console.log("auditClinicFormSubmitErr: ", err)
+            })
+        });
+        function publishClinic() {
+            $.ajax({
+                url: '/Admin/AllowClinicPublish/' + vm.auditData.clinicId,
+            }).done(function(res) {
+                if (res) {
+                    PublishSuccess();
+                }
+                else {
+                    PublishFalse();
+                }
+            }).fail(function(err) {
+                console.log("err: ", err)
+            })
+        };
+        function ActionSuccess() {
+            swal({
+                title: '已提出建議',
+                type: 'success',
+                closeOnClickOutside: false,
+                icon: "success",
+                timer: 1000,
+                button: false,
+            }).then(() => { window.location.href = "/Admin/AuditPage"; });
+        };
+        function ActionFalse() {
+            swal({
+                title: '提出建議失敗',
+                type: 'error',
+                closeOnClickOutside: false,
+                icon: "error",
+                timer: 1000,
+                button: false,
+            });
+        };
+        function PublishSuccess() {
+            swal({
+                title: '已成功上架',
+                type: 'success',
+                closeOnClickOutside: false,
+                icon: "success",
+                timer: 1000,
+                button: false,
+            }).then(() => { window.location.href = "/Admin/AuditPage"; });
+        };
+        function PublishFalse() {
+            swal({
+                title: '上架失敗',
+                type: 'error',
+                closeOnClickOutside: false,
+                icon: "error",
+                timer: 1000,
+                button: false,
+            });
+        };
+    </script>
+}

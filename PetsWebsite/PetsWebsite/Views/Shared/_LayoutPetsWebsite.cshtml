@@ -1,0 +1,989 @@
+﻿@using System.Security.Claims
+<!doctype html>
+<html lang="en">
+
+<head>
+    <title>EveryPets</title>
+
+    @*Required meta tags*@
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    <script src="https://cdn.jsdelivr.net/npm/vue@2/dist/vue.min.js"></script>
+    <script src="~/js/axios.min.js"></script>
+
+    <link rel="stylesheet" href="/lib/bootstrap/Custscss/all.css" />
+
+    @*Vue2 development version*@
+
+    @*Sweetalert*@
+    <script src="/js/sweetalert.min.js"></script>
+    <link rel="stylesheet" href="/css/Sweetalert/sweetalert.css" />
+    <link rel="stylesheet" href="/css/PoweiCSS/BackToTop.css">
+    @*From FaceBook*@
+    <meta property="fb:app_id" content="1019193978794826" />
+    <meta property="fb:admins" content="100000655412970" />
+    <script async defer crossorigin="anonymous" src="https://connect.facebook.net/zh_TW/sdk.js#xfbml=1&version=v14.0&appId=1019193978794826&autoLogAppEvents=1" nonce="5TIoxm6a"></script>
+
+
+    @await RenderSectionAsync("Styles", required: false)
+    <style>
+        body {
+            overflow-y: scroll;
+            overflow-x: hidden;
+        }
+    </style>
+</head>
+
+<body class="bg-secondary" style="font-weight: 600;">
+    <div class="back-top hide" title="回頂部">
+    </div>
+    <div class="container-fluid px-0">
+        <nav class="navbar navbar-expand-xl bg-primary text-dark">
+            <div class="container-fluid">
+                <a class="navbar-brand text-dark" href="/home/Index">
+                    <img class="d-inline-block" src="~/images/pet-food.svg" alt=""
+                         style="width: 25px; height: 25px; padding-bottom: 5px;">
+                    EveryPets
+                </a>
+                <button class="navbar-toggler bg-primary" type="button" data-bs-toggle="collapse"
+                        data-bs-target="#navbarSupportedContent" aria-controls="navbarSupportedContent"
+                        aria-expanded="false" aria-label="Toggle navigation">
+                    <span class="navbar-toggler-icon"></span>
+                </button>
+                <div class="collapse navbar-collapse" id="navbarSupportedContent">
+                    <ul class="navbar-nav ms-auto me-auto mb-2 mb-lg-0">
+                        <li class="nav-item ms-2 me-2">
+                            <a class="nav-link text-dark" href="/Clinic/Clinic" id="navbarDropdown" role="button"
+                               data-bs-toggle="" aria-expanded="false">
+                                醫療資訊
+                            </a>
+                        </li>
+                        <li class="nav-item ms-2 me-2">
+                            <a class="nav-link text-dark" asp-controller="Shop" asp-action="Index">
+                                購物專區
+                            </a>
+                        </li>
+                        <li class="nav-item ms-2 me-2">
+                            <a class="nav-link text-dark" asp-controller="Restaurants" asp-action="Restaurant">
+                                寵物餐廳
+                            </a>
+                        </li>
+                        <li class="nav-item dropdown ms-2 me-2">
+                            <a class="nav-link text-dark" asp-controller="PetsAboption" asp-action="PetsAboption" id="navbarDropdown" role="button"
+                               data-bs-toggle="" aria-expanded="false">
+                                領養專區
+                            </a>
+                        </li>
+                    </ul>
+                    @{
+                        if (!User.Identity.IsAuthenticated)
+                        {
+                                        <div class="dropdown">
+                                            <button class="btn btnPrimary mx-3 dropdown-toggle" id="dropdownMenuButton2"
+                                                data-bs-toggle="dropdown" aria-expanded="false">
+                                                登入
+                                            </button>
+                                            <div style="position: relative; right: 80%">
+                                                <ul class="dropdown-menu dropdown-menu-dark" aria-labelledby="dropdownMenuButton2">
+                                                    <li>
+                                                        <a class="dropdown-item" data-bs-toggle="modal"
+                                                       data-bs-target="#modalUserSignin" href="#">使用者</a>
+                                                    </li>
+                                                    <li>
+                                                        <a class="dropdown-item" data-bs-toggle="modal"
+                                                       data-bs-target="#modalOwnerSignin" href="#">廠商</a>
+                                                    </li>
+                                                </ul>
+                                            </div>
+                                        </div>
+                        }
+                        else
+                        {
+                            if (User.Claims.FirstOrDefault(X => X.Type == ClaimTypes.Role)?.Value != "Company")
+                            {
+                                            <a class="text-dark text-decoration-none" type="button"
+                                       data-bs-toggle="offcanvas" data-bs-target="#shoppingCart" aria-controls="shoppingCart">
+                                                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor"
+                                             class="bi bi-cart" viewBox="0 0 16 16">
+                                                    <path d="M0 1.5A.5.5 0 0 1 .5 1H2a.5.5 0 0 1 .485.379L2.89 3H14.5a.5.5 0 0 1 .491.592l-1.5 8A.5.5 0 0 1 13 12H4a.5.5 0 0 1-.491-.408L2.01 3.607 1.61 2H.5a.5.5 0 0 1-.5-.5zM3.102 4l1.313 7h8.17l1.313-7H3.102zM5 12a2 2 0 1 0 0 4 2 2 0 0 0 0-4zm7 0a2 2 0 1 0 0 4 2 2 0 0 0 0-4zm-7 1a1 1 0 1 1 0 2 1 1 0 0 1 0-2zm7 0a1 1 0 1 1 0 2 1 1 0 0 1 0-2z" />
+                                                </svg>
+                                                購物車
+                                            </a>
+                                if (User.Claims.FirstOrDefault(X => X.Type == ClaimTypes.Role)?.Value != "Admin")
+                                {
+
+                                                <div class="dropdown">
+                                                    <a type="button" class="btn btnPrimary mx-3 dropdown-toggle" id="dropdownMenuButton2"
+                                           data-bs-toggle="dropdown" aria-expanded="false">
+                                                        會員資訊
+                                                    </a>
+                                                    <div style="position: relative; right: -5%">
+                                                        <ul class="dropdown-menu dropdown-menu-dark" aria-labelledby="dropdownMenuButton2">
+                                                            <li><a class="dropdown-item" asp-controller="UserDetails" asp-action="Index">會員資料</a></li>
+                                                            <li><a class="dropdown-item" asp-controller="UserCollection" asp-action="Index">我的最愛</a></li>
+                                                            <li><a class="dropdown-item" asp-controller="MemberOrderHistories" asp-action="MemberOrderHistory">歷史訂單</a></li>
+                                                            <li>
+                                                                <hr class="dropdown-divider">
+                                                            </li>
+                                                            <li><a class="dropdown-item" href="/Members/Logout">登出</a></li>
+                                                        </ul>
+                                                    </div>
+                                                </div>
+                                }
+                                else
+                                {
+                                                <div class="dropdown">
+                                                    <a type="button" class="btn btnPrimary mx-3 dropdown-toggle" id="dropdownMenuButton2"
+                                           data-bs-toggle="dropdown" aria-expanded="false">
+                                                        管理者資訊
+                                                    </a>
+                                                    <div style="position: relative; right: -5%">
+                                                        <ul class="dropdown-menu dropdown-menu-dark" aria-labelledby="dropdownMenuButton2">
+                                                            <li><a class="dropdown-item" asp-controller="Admin" asp-action="AuditPage">審核商品</a></li>
+                                                            <li>
+                                                                <hr class="dropdown-divider">
+                                                            </li>
+                                                            <li><a class="dropdown-item" href="/Members/Logout">登出</a></li>
+                                                        </ul>
+                                                    </div>
+                                                </div>
+                                }
+                            }
+                            else
+                            {
+                                            <div class="dropdown">
+                                                <a type="button" class="btn btnPrimary mx-3 dropdown-toggle" id="dropdownMenuButton2" data-bs-toggle="dropdown" aria-expanded="false">
+                                                    廠商資訊
+                                                </a>
+                                                <div style="position: relative; right: -5%">
+                                                    <ul class="dropdown-menu dropdown-menu-dark" aria-labelledby="dropdownMenuButton2">
+                                                        <li><a class="dropdown-item" asp-controller="Owner" asp-action="Index">管理商品</a></li>
+                                                        <li> <hr class="dropdown-divider"></li>
+                                                        <li><a class="dropdown-item" href="/Members/Logout">登出</a></li>
+                                                    </ul>
+                                                </div>
+                                            </div>
+                            }
+                        }
+                    }
+                </div>
+            </div>
+        </nav>
+    </div>
+    <div class="container-fuild">
+        <main role="main" class="pb-3" style="min-height: 550px;">
+            @RenderBody()
+        </main>
+    </div>
+    <div id="mainFooter" style="position: relative; width: 100%; min-height: 100%; padding-bottom: 98px; box-sizing: border-box;">
+        <footer class="border-top footer text-muted bg-primary" style="width: 100%; height: 30px; position: absolute; bottom: 0px; left: 0px;">
+            <div class="container">
+                &copy; 2022 - PetsWebsite - <a asp-area="" asp-controller="Home" asp-action="Privacy">Privacy</a>
+            </div>
+        </footer>
+    </div>
+
+    @*UserSignin彈出視窗*@ @*會員登入*@
+    <div class="modal fade" tabindex="-1" role="dialog" id="modalUserSignin" data-bs-backdrop="static">
+        <div class="modal-dialog modal-dialog-centered" role="document">
+            <div class="modal-content rounded-4 shadow">
+                <div class="modal-header p-5 pb-4 border-bottom-0">
+                    <h2 class="fw-bold mb-0">歡迎回來</h2>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+
+                <div class="modal-body p-5 pt-0">
+                    <div class="">
+                        <div class="form-floating mb-3 rounded-pill">
+                            <input type="email" class="form-control rounded-3" id="floatingInput" v-model="Account">
+                            <label for="floatingInput">電子郵件</label>
+                        </div>
+                        <div class="form-floating mb-3">
+                            <input type="password" class="form-control rounded-3" id="floatingPassword" v-model="Password">
+                            <label for="floatingPassword">密碼</label>
+                        </div>
+                        <button class="w-100 mb-2 btn btn-lg rounded-3 btn-primary" style="font-size: 15px;" v-on:click="SubmitHandle">登入</button>
+                        <div class="row row-cols-2 text-center">
+                            <a class="col text-decoration-none" data-bs-toggle="modal"
+                               data-bs-target="#modalUserForgotPassword" href="#">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor"
+                                     class="bi bi-shield-lock" viewBox="0 0 16 16">
+                                    <path d="M5.338 1.59a61.44 61.44 0 0 0-2.837.856.481.481 0 0 0-.328.39c-.554 4.157.726 7.19 2.253 9.188a10.725 10.725 0 0 0 2.287 2.233c.346.244.652.42.893.533.12.057.218.095.293.118a.55.55 0 0 0 .101.025.615.615 0 0 0 .1-.025c.076-.023.174-.061.294-.118.24-.113.547-.29.893-.533a10.726 10.726 0 0 0 2.287-2.233c1.527-1.997 2.807-5.031 2.253-9.188a.48.48 0 0 0-.328-.39c-.651-.213-1.75-.56-2.837-.855C9.552 1.29 8.531 1.067 8 1.067c-.53 0-1.552.223-2.662.524zM5.072.56C6.157.265 7.31 0 8 0s1.843.265 2.928.56c1.11.3 2.229.655 2.887.87a1.54 1.54 0 0 1 1.044 1.262c.596 4.477-.787 7.795-2.465 9.99a11.775 11.775 0 0 1-2.517 2.453 7.159 7.159 0 0 1-1.048.625c-.28.132-.581.24-.829.24s-.548-.108-.829-.24a7.158 7.158 0 0 1-1.048-.625 11.777 11.777 0 0 1-2.517-2.453C1.928 10.487.545 7.169 1.141 2.692A1.54 1.54 0 0 1 2.185 1.43 62.456 62.456 0 0 1 5.072.56z" />
+                                    <path d="M9.5 6.5a1.5 1.5 0 0 1-1 1.415l.385 1.99a.5.5 0 0 1-.491.595h-.788a.5.5 0 0 1-.49-.595l.384-1.99a1.5 1.5 0 1 1 2-1.415z" />
+                                </svg>
+                                <small class="text-muted">忘記密碼 ??</small>
+                            </a>
+                            <a class="col text-decoration-none" data-bs-toggle="modal" data-bs-target="#modalUserSignUp"
+                               href="#">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor"
+                                     class="bi bi-door-open-fill" viewBox="0 0 16 16">
+                                    <path d="M1.5 15a.5.5 0 0 0 0 1h13a.5.5 0 0 0 0-1H13V2.5A1.5 1.5 0 0 0 11.5 1H11V.5a.5.5 0 0 0-.57-.495l-7 1A.5.5 0 0 0 3 1.5V15H1.5zM11 2h.5a.5.5 0 0 1 .5.5V15h-1V2zm-2.5 8c-.276 0-.5-.448-.5-1s.224-1 .5-1 .5.448.5 1-.224 1-.5 1z" />
+                                </svg>
+                                <small class="text-muted">註冊帳號</small>
+                            </a>
+                        </div>
+                        <hr class="my-4">
+                        <div class="d-flex justify-content-center">
+                            <p class="mb-3 align-items-center text-dark" style="font-size: 15px;">透過第三方帳號登入</p>
+                        </div>
+                        <a class="w-100 py-2 mb-2 btn text-light rounded-3 rounded-pill" type="submit" style="background-color: #ea4335;" href="/Members/GoogleLogin">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor"
+                                 class="bi bi-google" viewBox="0 0 16 16">
+                                <path d="M15.545 6.558a9.42 9.42 0 0 1 .139 1.626c0 2.434-.87 4.492-2.384 5.885h.002C11.978 15.292 10.158 16 8 16A8 8 0 1 1 8 0a7.689 7.689 0 0 1 5.352 2.082l-2.284 2.284A4.347 4.347 0 0 0 8 3.166c-2.087 0-3.86 1.408-4.492 3.304a4.792 4.792 0 0 0 0 3.063h.003c.635 1.893 2.405 3.301 4.492 3.301 1.078 0 2.004-.276 2.722-.764h-.003a3.702 3.702 0 0 0 1.599-2.431H8v-3.08h7.545z" />
+                            </svg>
+                            透過Google登入
+                        </a>
+                        <a class="w-100 py-2 mb-2 btn rounded-3 rounded-pill text-light" type="submit" style="background-color: rgb(59, 89, 152);" href="/Members/FacebookLogin">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor"
+                                 class="bi bi-facebook" viewBox="0 0 16 16">
+                                <path d="M16 8.049c0-4.446-3.582-8.05-8-8.05C3.58 0-.002 3.603-.002 8.05c0 4.017 2.926 7.347 6.75 7.951v-5.625h-2.03V8.05H6.75V6.275c0-2.017 1.195-3.131 3.022-3.131.876 0 1.791.157 1.791.157v1.98h-1.009c-.993 0-1.303.621-1.303 1.258v1.51h2.218l-.354 2.326H9.25V16c3.824-.604 6.75-3.934 6.75-7.951z" />
+                            </svg>
+                            透過Facebook登入
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    @*UserSignUp彈出視窗*@ @*會員註冊*@
+    <div class="modal fade" tabindex="-1" role="dialog" id="modalUserSignUp" data-bs-backdrop="static">
+        <div class="modal-dialog modal-dialog-centered" role="document">
+            <div class="modal-content rounded-4 shadow">
+                <div class="modal-header p-5 pb-4 border-bottom-0">
+                    <h2 class="fw-bold mb-0">歡迎註冊</h2>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+
+                <div class="modal-body p-5 pt-0">
+                    <form class="" method="post" action="/Members/Register">
+                        <div class="row row-cols-2">
+                            <div class="form-floating mb-3 col">
+                                <input type="text" class="form-control rounded-3" id="floatingInput" name="LastName" v-model="LastName">
+                                <label for="floatingInput" style="margin-left: 12px;">姓</label>
+                            </div>
+                            <div class="form-floating mb-3 col">
+                                <input type="text" class="form-control rounded-3" id="floatingInput" name="FirstName" v-model="FirstName">
+                                <label for="floatingInput" style="margin-left: 12px;"> 名</label>
+                            </div>
+                        </div>
+                        <div class="form-floating mb-3">
+                            <input type="email" class="form-control rounded-3" id="floatingInput" name="Account" v-model="Account" required>
+                            <label for="floatingInput">電子郵件</label>
+                        </div>
+                        <div class="form-floating mb-3">
+                            <input type="password" class="form-control rounded-3" id="floatingPassword" name="Password" v-model="Password" required>
+                            <label for="floatingPassword">密碼</label>
+                        </div>
+                        <a class="w-100 mb-2 btn btn-lg rounded-3 btn-primary" style="font-size: 15px;" v-on:click="MemRegisterHandle">
+                            註冊
+                        </a>
+                        <div class="row row-cols-1 text-center">
+                            <a class="col text-decoration-none" data-bs-toggle="modal" data-bs-target="#modalUserSignin"
+                               href="#">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor"
+                                     class="bi bi-box-arrow-in-right" viewBox="0 0 16 16">
+                                    <path fill-rule="evenodd"
+                                          d="M6 3.5a.5.5 0 0 1 .5-.5h8a.5.5 0 0 1 .5.5v9a.5.5 0 0 1-.5.5h-8a.5.5 0 0 1-.5-.5v-2a.5.5 0 0 0-1 0v2A1.5 1.5 0 0 0 6.5 14h8a1.5 1.5 0 0 0 1.5-1.5v-9A1.5 1.5 0 0 0 14.5 2h-8A1.5 1.5 0 0 0 5 3.5v2a.5.5 0 0 0 1 0v-2z" />
+                                    <path fill-rule="evenodd"
+                                          d="M11.854 8.354a.5.5 0 0 0 0-.708l-3-3a.5.5 0 1 0-.708.708L10.293 7.5H1.5a.5.5 0 0 0 0 1h8.793l-2.147 2.146a.5.5 0 0 0 .708.708l3-3z" />
+                                </svg>
+                                <small class="text-muted">返回登入畫面</small>
+                            </a>
+                        </div>
+                        <hr class="my-4">
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    @*OwnerSignin彈出視窗*@ @*產商登入*@
+    <div class="modal fade" tabindex="-1" role="dialog" id="modalOwnerSignin" data-bs-backdrop="static">
+        <div class="modal-dialog modal-dialog-centered" role="document">
+            <div class="modal-content rounded-4 shadow">
+                <div class="modal-header p-5 pb-4 border-bottom-0">
+                    <h2 class="fw-bold mb-0">歡迎回來</h2>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+
+                <div class="modal-body p-5 pt-0">
+                    <div class="">
+                        <div class="form-floating mb-3 rounded-pill">
+                            <input type="email" class="form-control rounded-3" id="floatingInput" v-model="Account">
+                            <label for="floatingInput">電子郵件</label>
+                        </div>
+                        <div class="form-floating mb-3">
+                            <input type="password" class="form-control rounded-3" id="floatingPassword" v-model="Password">
+                            <label for="floatingPassword">密碼</label>
+                        </div>
+                        <button class="w-100 mb-2 btn btn-lg rounded-3 btn-primary" style="font-size: 15px;"
+                                v-on:click="ComLoginHandle">
+                            登入
+                        </button>
+                        <div class="row row-cols-2 text-center">
+                            <a class="col text-decoration-none" data-bs-toggle="modal"
+                               data-bs-target="#modalOwnerForgotPassword" href="#">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor"
+                                     class="bi bi-shield-lock" viewBox="0 0 16 16">
+                                    <path d="M5.338 1.59a61.44 61.44 0 0 0-2.837.856.481.481 0 0 0-.328.39c-.554 4.157.726 7.19 2.253 9.188a10.725 10.725 0 0 0 2.287 2.233c.346.244.652.42.893.533.12.057.218.095.293.118a.55.55 0 0 0 .101.025.615.615 0 0 0 .1-.025c.076-.023.174-.061.294-.118.24-.113.547-.29.893-.533a10.726 10.726 0 0 0 2.287-2.233c1.527-1.997 2.807-5.031 2.253-9.188a.48.48 0 0 0-.328-.39c-.651-.213-1.75-.56-2.837-.855C9.552 1.29 8.531 1.067 8 1.067c-.53 0-1.552.223-2.662.524zM5.072.56C6.157.265 7.31 0 8 0s1.843.265 2.928.56c1.11.3 2.229.655 2.887.87a1.54 1.54 0 0 1 1.044 1.262c.596 4.477-.787 7.795-2.465 9.99a11.775 11.775 0 0 1-2.517 2.453 7.159 7.159 0 0 1-1.048.625c-.28.132-.581.24-.829.24s-.548-.108-.829-.24a7.158 7.158 0 0 1-1.048-.625 11.777 11.777 0 0 1-2.517-2.453C1.928 10.487.545 7.169 1.141 2.692A1.54 1.54 0 0 1 2.185 1.43 62.456 62.456 0 0 1 5.072.56z" />
+                                    <path d="M9.5 6.5a1.5 1.5 0 0 1-1 1.415l.385 1.99a.5.5 0 0 1-.491.595h-.788a.5.5 0 0 1-.49-.595l.384-1.99a1.5 1.5 0 1 1 2-1.415z" />
+                                </svg>
+                                <small class="text-muted">忘記密碼 ??</small>
+                            </a>
+                            <a class="col text-decoration-none" data-bs-toggle="modal"
+                               data-bs-target="#modalOwnerSignUp" href="#">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor"
+                                     class="bi bi-door-open-fill" viewBox="0 0 16 16">
+                                    <path d="M1.5 15a.5.5 0 0 0 0 1h13a.5.5 0 0 0 0-1H13V2.5A1.5 1.5 0 0 0 11.5 1H11V.5a.5.5 0 0 0-.57-.495l-7 1A.5.5 0 0 0 3 1.5V15H1.5zM11 2h.5a.5.5 0 0 1 .5.5V15h-1V2zm-2.5 8c-.276 0-.5-.448-.5-1s.224-1 .5-1 .5.448.5 1-.224 1-.5 1z" />
+                                </svg>
+                                <small class="text-muted">註冊帳號</small>
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    @*OwnerSignUp彈出視窗*@@*產商註冊*@
+    <div class="modal fade" tabindex="-1" role="dialog" id="modalOwnerSignUp" data-bs-backdrop="static" v-on:change="ISsubmit">
+        <div class="modal-dialog modal-dialog-centered" role="document">
+            <div class="modal-content rounded-4 shadow">
+                <div class="modal-header p-5 pb-4 border-bottom-0">
+                    <h2 class="fw-bold mb-0">歡迎註冊</h2>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+
+                <div class="modal-body p-5 pt-0">
+                    <form class="">
+                        <div class="form-floating mb-3">
+                            <input type="text" class="form-control rounded-3" id="floatingInput" v-model="CompanyName">
+                            <label for="floatingInput">公司名稱</label>
+                        </div>
+                        <div class="form-floating mb-3">
+                            <input type="text" class="form-control rounded-3" id="floatingInput" v-model="CompanyId">
+                            <label for="floatingInput">統一編號</label>
+                        </div>
+                        <div class="form-floating mb-3">
+                            <input type="email" class="form-control rounded-3" id="floatingInput" v-model="Account">
+                            <label for="floatingInput">電子郵件</label>
+                        </div>
+                        <div class="form-floating mb-3">
+                            <input type="password" class="form-control rounded-3" id="floatingPassword" v-model="Password">
+                            <label for="floatingPassword">密碼</label>
+                        </div>
+                        <button class="w-100 mb-2 btn btn-lg rounded-3 btn-primary" style="font-size: 15px;"
+                                v-on:click="ComRegisterHandle" v-bind:disabled="IsEmpty">
+                            註冊
+                        </button>
+                        <div class="row row-cols-1 text-center">
+                            <a class="col text-decoration-none" data-bs-toggle="modal"
+                               data-bs-target="#modalOwnerSignin" href="#">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor"
+                                     class="bi bi-box-arrow-in-right" viewBox="0 0 16 16">
+                                    <path fill-rule="evenodd"
+                                          d="M6 3.5a.5.5 0 0 1 .5-.5h8a.5.5 0 0 1 .5.5v9a.5.5 0 0 1-.5.5h-8a.5.5 0 0 1-.5-.5v-2a.5.5 0 0 0-1 0v2A1.5 1.5 0 0 0 6.5 14h8a1.5 1.5 0 0 0 1.5-1.5v-9A1.5 1.5 0 0 0 14.5 2h-8A1.5 1.5 0 0 0 5 3.5v2a.5.5 0 0 0 1 0v-2z" />
+                                    <path fill-rule="evenodd"
+                                          d="M11.854 8.354a.5.5 0 0 0 0-.708l-3-3a.5.5 0 1 0-.708.708L10.293 7.5H1.5a.5.5 0 0 0 0 1h8.793l-2.147 2.146a.5.5 0 0 0 .708.708l3-3z" />
+                                </svg>
+                                <small class="text-muted">返回登入畫面</small>
+                            </a>
+                        </div>
+                        <hr class="my-4">
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    @*User忘記密碼彈出視窗*@
+    <div class="modal fade" tabindex="-1" role="dialog" id="modalUserForgotPassword">
+        <div class="modal-dialog modal-dialog-centered" role="document">
+            <div class="modal-content rounded-4 shadow">
+                <div class="modal-header p-5 pb-4 border-bottom-0">
+                    <h2 class="fw-bold mb-0">忘記密碼</h2>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+
+                <div class="modal-body p-5 pt-0">
+                    <form class="">
+                        <div class="form-floating mb-3">
+                            <input type="email" class="form-control rounded-3" id="floatingInput" v-model="Email">
+                            <label for="floatingInput">電子郵件</label>
+                        </div>
+                        <a class="w-100 mb-2 btn btn-lg rounded-3 btn-primary" style="font-size: 15px;"
+                           type="submit" v-on:click="SendMailToken">寄送驗證信</a>
+                        <small class="text-danger">請輸入電子郵件信箱，我們將為您傳送驗證信，謝謝。</small>
+                        <a class="col d-block text-decoration-none" data-bs-toggle="modal"
+                           data-bs-target="#modalUserSignin" href="#">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor"
+                                 class="bi bi-box-arrow-in-right" viewBox="0 0 16 16">
+                                <path fill-rule="evenodd"
+                                      d="M6 3.5a.5.5 0 0 1 .5-.5h8a.5.5 0 0 1 .5.5v9a.5.5 0 0 1-.5.5h-8a.5.5 0 0 1-.5-.5v-2a.5.5 0 0 0-1 0v2A1.5 1.5 0 0 0 6.5 14h8a1.5 1.5 0 0 0 1.5-1.5v-9A1.5 1.5 0 0 0 14.5 2h-8A1.5 1.5 0 0 0 5 3.5v2a.5.5 0 0 0 1 0v-2z" />
+                                <path fill-rule="evenodd"
+                                      d="M11.854 8.354a.5.5 0 0 0 0-.708l-3-3a.5.5 0 1 0-.708.708L10.293 7.5H1.5a.5.5 0 0 0 0 1h8.793l-2.147 2.146a.5.5 0 0 0 .708.708l3-3z" />
+                            </svg>
+                            <small class="text-muted">返回登入畫面</small>
+                        </a>
+                    </form>
+                    <!--使用 Bootstrap Modal 樣式，當執行有錯誤時，顯示錯誤訊息-->
+                    <div class="modal fade" id="ErrorAlert" tabindex="-1" role="dialog">
+                        <div class="modal-dialog modal-lg" role="document">
+                            <div class="modal-content">
+                                <div class="modal-header">
+                                    <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                                    <h4 class="modal-title">錯誤訊息</h4>
+                                </div>
+                                <div class="modal-body" id="ErrorMsg" style="overflow-x:auto;width:100%;">
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    @*Owner忘記密碼彈出視窗*@
+    <div class="modal fade" tabindex="-1" role="dialog" id="modalOwnerForgotPassword" data-bs-backdrop="static">
+        <div class="modal-dialog modal-dialog-centered" role="document">
+            <div class="modal-content rounded-4 shadow">
+                <div class="modal-header p-5 pb-4 border-bottom-0">
+                    <h2 class="fw-bold mb-0">忘記密碼</h2>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+
+                <div class="modal-body p-5 pt-0">
+                    <form class="">
+                        <div class="form-floating mb-3">
+                            <input type="email" class="form-control rounded-3" id="floatingInput" v-model="Email">
+                            <label for="floatingInput">電子郵件</label>
+                        </div>
+                        <a class="w-100 mb-2 btn btn-lg rounded-3 btn-primary" style="font-size: 15px;"
+                           type="submit" v-on:click="SendMailToken">寄送驗證信</a>
+                        <small class="text-danger">請輸入電子郵件信箱，我們將為您傳送驗證信，謝謝。</small>
+                        <a class="col d-block text-decoration-none" data-bs-toggle="modal"
+                           data-bs-target="#modalOwnerSignin" href="#">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor"
+                                 class="bi bi-box-arrow-in-right" viewBox="0 0 16 16">
+                                <path fill-rule="evenodd"
+                                      d="M6 3.5a.5.5 0 0 1 .5-.5h8a.5.5 0 0 1 .5.5v9a.5.5 0 0 1-.5.5h-8a.5.5 0 0 1-.5-.5v-2a.5.5 0 0 0-1 0v2A1.5 1.5 0 0 0 6.5 14h8a1.5 1.5 0 0 0 1.5-1.5v-9A1.5 1.5 0 0 0 14.5 2h-8A1.5 1.5 0 0 0 5 3.5v2a.5.5 0 0 0 1 0v-2z" />
+                                <path fill-rule="evenodd"
+                                      d="M11.854 8.354a.5.5 0 0 0 0-.708l-3-3a.5.5 0 1 0-.708.708L10.293 7.5H1.5a.5.5 0 0 0 0 1h8.793l-2.147 2.146a.5.5 0 0 0 .708.708l3-3z" />
+                            </svg>
+                            <small class="text-muted">返回登入畫面</small>
+                        </a>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    @*購物車*@
+    <div class="offcanvas offcanvas-end" style="width: 700px;" tabindex="-1" id="shoppingCart"
+         aria-labelledby="shoppingCartLabel">
+        <div class="offcanvas-header pb-0">
+            <h5 class="offcanvas-title" id="shoppingCartLabel">購物清單</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="offcanvas" aria-label="Close"></button>
+        </div>
+        <div class="offcanvas-body">
+            <div class="d-flex flex-column align-items-stretch flex-shrink-0 bg-white"
+                 style="width: 680px; height: 80px;">
+                <div class="list-group list-group-flush border-bottom scrollarea">
+                    <div class="row">
+                        <div class="col-4">
+                            商品
+                        </div>
+                        <div class="col-1">
+                            單價
+                        </div>
+                        <div class="col-3" style="text-align: center;">
+                            數量
+                        </div>
+                        <div class="col-2">
+                            總計
+                        </div>
+                        <div class="col-2">
+                            移除
+                        </div>
+                    </div>
+                    <div class="row border-top border-bottom pt-1 pb-1 d-flex align-items-center" style="height: 80px;" v-for="(item,index) in ShopCarList">
+                        <div class="col-2">
+                            <img v-bind:src="'/images/Product/' + item.picturePath" class="card-img-top w-75" alt="...">
+                        </div>
+                        <div class="col-2 text-truncate" v-bind:title="item.productName">
+                            {{item.productName}}
+                        </div>
+                        <div class="col-1">
+                            {{item.price}}
+                        </div>
+                        <div class="col-3">
+                            <div class="input-group container justify-content-center">
+                                <a class="btn border-0  p-0" type="button" style="width:32px;" v-on:click="ReductCount(item)">
+                                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512" width="16" height="16"><path d="M400 288h-352c-17.69 0-32-14.32-32-32.01s14.31-31.99 32-31.99h352c17.69 0 32 14.3 32 31.99S417.7 288 400 288z" /></svg>
+                                </a>
+                                <input type="text" style="width: 40px; font-size: 5px; text-align: center;" :value="item.count" v-on:change="ChangeCount($event,index)">
+                                <a class="btn border-0 p-0" type="button" style="width:32px;" v-on:click="AddCount(item)">
+                                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512" width="16" height="16"><path d="M432 256c0 17.69-14.33 32.01-32 32.01H256v144c0 17.69-14.33 31.99-32 31.99s-32-14.3-32-31.99v-144H48c-17.67 0-32-14.32-32-32.01s14.33-31.99 32-31.99H192v-144c0-17.69 14.33-32.01 32-32.01s32 14.32 32 32.01v144h144C417.7 224 432 238.3 432 256z" /></svg>
+                                </a>
+                            </div>
+                        </div>
+                        <div class="col-2">
+                            {{item.price * item.count}}
+                        </div>
+                        <div class="col-2">
+                            <button class="btn btn-lg border-0 rounded-3" style="font-size: 15px;" type="submit" :value="item.shopCarId" v-on:click="RemoveData(index)">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-trash3-fill" viewBox="0 0 16 16">
+                                    <path d="M11 1.5v1h3.5a.5.5 0 0 1 0 1h-.538l-.853 10.66A2 2 0 0 1 11.115 16h-6.23a2 2 0 0 1-1.994-1.84L2.038 3.5H1.5a.5.5 0 0 1 0-1H5v-1A1.5 1.5 0 0 1 6.5 0h3A1.5 1.5 0 0 1 11 1.5Zm-5 0v1h4v-1a.5.5 0 0 0-.5-.5h-3a.5.5 0 0 0-.5.5ZM4.5 5.029l.5 8.5a.5.5 0 1 0 .998-.06l-.5-8.5a.5.5 0 1 0-.998.06Zm6.53-.528a.5.5 0 0 0-.528.47l-.5 8.5a.5.5 0 0 0 .998.058l.5-8.5a.5.5 0 0 0-.47-.528ZM8 4.5a.5.5 0 0 0-.5.5v8.5a.5.5 0 0 0 1 0V5a.5.5 0 0 0-.5-.5Z" />
+                            </button>
+                        </div>
+                    </div>
+                </div>
+                <div class="row justify-content-end mt-2">
+                    <div class="col-2">
+                        <a class="btn btn-primary btn-sm text-light" href="/ShoppingCart/Index">前往結帳</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="~/lib/jquery/dist/jquery.min.js"></script>
+    @await RenderSectionAsync("Scripts", required: false)
+
+</body>
+
+<script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
+<script src="~/lib/jquery/Powei/BackToTop.js"></script>
+<script>
+
+    function ErrorVerify() {
+        swal({
+            title: '未驗證信箱',
+            text: '電子郵件未驗證',
+            type: 'error',
+            closeOnClickOutside: false,
+            icon: "error",
+            button: false,
+            timer: 1000
+        })
+    };
+    function ErrorLogin() {
+        swal({
+            title: '登入失敗',
+            text: '帳號或密碼錯誤',
+            type: 'error',
+            closeOnClickOutside: false,
+            icon: "error",
+            button: false,
+            timer: 2000
+        })
+    };
+    function ErrorRegister() {
+        swal({
+            title: '註冊失敗',
+            text: '此信箱已註冊',
+            type: 'error',
+            closeOnClickOutside: false,
+            icon: "error",
+            button: false,
+            timer: 1000
+        })
+    };
+    function ErrorMailRegister() {
+        swal({
+            title: '註冊失敗',
+            text: '帳號格式不正確',
+            type: 'error',
+            closeOnClickOutside: false,
+            icon: "error",
+            button: false,
+            timer: 1000
+        })
+    };
+    function SuccessLogin() {
+        swal({
+            title: '登入成功',
+            text: '歡迎您回來',
+            type: 'success',
+            closeOnClickOutside: false,
+            icon: "success",
+            button: "確定",
+            timer: 3000
+        }).then(() => {
+            location.reload();
+        });
+    };
+    function SuccessRegister() {
+        swal({
+            title: '帳號註冊成功',
+            text: '請前往信箱驗證郵件!',
+            type: 'success',
+            closeOnClickOutside: false,
+            icon: "success",
+            button: "確定",
+            timer: 2000
+        }).then(() => {
+            window.location.href = '/Home/Index'
+        });
+    };
+    //會員註冊
+    var ComRst = new Vue({
+        data: {
+            LastName: '',
+            FirstName: '',
+            Account: '',
+            Password: '',
+        },
+        methods: {
+            MemRegisterHandle: function() {
+                if (this.Account.length == 0 || this.Password.length == 0) {
+                    ErrorRegister();
+                    return;
+                }
+                var emailRule = /^\w+((-\w+)|(\.\w+))*\@@[A-Za-z0-9]+((\.|-)[A-Za-z0-9]+)*\.[A-Za-z]+$/;
+                console.log(this.Account.search(emailRule));
+                if (this.Account.search(emailRule) == -1) {
+                    ErrorMailRegister();
+                    return;
+                }
+                var MemRegistdata = {
+                    LastName: this.LastName,
+                    FirstName: this.FirstName,
+                    Account: this.Account,
+                    Password: this.Password,
+                };
+                fetch("/api/UserRegister/MenberRegister", {
+                    method: 'POST', // or 'PUT'
+                    body: JSON.stringify(MemRegistdata), // data can be `string` or {object}!
+                    headers: new Headers({
+                        'Content-Type': 'application/json'
+                    })
+                })
+                    .then(res => res.json())
+                    .then(response => {
+                        console.log('Success:', response);
+                        if (response) {
+                            SuccessRegister();
+                        } else {
+                            ErrorRegister();
+                        }
+                    })
+                    .catch(error => console.error('Error:', error));
+            }
+        }
+    }).$mount("#modalUserSignUp");
+    //會員登入
+    var MemLog = new Vue({
+        data: {
+            Account: '',
+            Password: ''
+        },
+        methods: {
+            SubmitHandle: function() {
+                var Ldata = {
+                    Account: this.Account,
+                    Password: this.Password
+                }; console.log(Ldata);
+                fetch("/api/UserOpt/UserLogin", {
+                    method: 'POST', // or 'PUT'
+                    body: JSON.stringify(Ldata), // data can be `string` or {object}!
+                    headers: new Headers({
+                        'Content-Type': 'application/json'
+                    })
+                })
+                    .then(res => res.json())
+                    .catch(error => console.error('Error:', error))
+                    .then(response => {
+                        console.log('Success:', response);
+                        if (response == 1) {
+                            ErrorLogin();
+                        } else if (response == 2) {
+                            ErrorVerify();
+                        } else {
+                            SuccessLogin();
+                        }
+                    });
+            }
+        }
+    }).$mount("#modalUserSignin");
+    @*廠商註冊*@
+                                                                    var ComRst = new Vue({
+        data: {
+            CompanyId: '',
+            CompanyName: '',
+            Account: '',
+            Password: '',
+            IsEmpty: true,
+        },
+        methods: {
+            ComRegisterHandle: function() {
+                var ComRegistdata = {
+                    CompanyId: this.CompanyId,
+                    CompanyName: this.CompanyName,
+                    Account: this.Account,
+                    Password: this.Password,
+
+                };
+                fetch("/api/UserRegister/CompanyRegister", {
+                    method: 'POST', // or 'PUT'
+                    body: JSON.stringify(ComRegistdata), // data can be `string` or {object}!
+                    headers: new Headers({
+                        'Content-Type': 'application/json'
+                    })
+                })
+                    .then(res => res.json())
+                    .catch(error => console.error('Error:', error))
+                    .then(response => {
+                        console.log('Success:', response);
+                        if (response) {
+                            SuccessRegister();
+                        } else {
+                            ErrorRegister();
+                        }
+                    });
+            },
+            ISsubmit: function() {
+                if (this.CompanyId.trim().length != 0 && this.CompanyName.trim().length != 0 &&
+                    this.Account.trim().length != 0 && this.Password.trim().length != 0) {
+                    this.IsEmpty = false;
+                } else {
+                    this.IsEmpty = true;
+                }
+            }
+        }
+    }).$mount("#modalOwnerSignUp");
+    //廠商登入
+    var ComLog = new Vue({
+        data: {
+            Account: '',
+            Password: ''
+        },
+        methods: {
+            ComLoginHandle: function() {
+                var ComLogdata = {
+                    Account: this.Account,
+                    Password: this.Password
+                };
+                fetch("/api/UserOpt/CompanyLogin", {
+                    method: 'POST', // or 'PUT'
+                    body: JSON.stringify(ComLogdata), // data can be `string` or {object}!
+                    headers: new Headers({
+                        'Content-Type': 'application/json'
+                    })
+                })
+                    .then(res => res.json())
+                    .catch(error => console.error('Error:', error))
+                    .then(response => {
+                        console.log('Success:', response);
+                        if (response) {
+                            SuccessLogin();
+                        } else {
+                            ErrorLogin();
+                        }
+                    });
+            }
+        }
+    }).$mount("#modalOwnerSignin");
+    //會員忘記密碼
+    var forgotPass = new Vue({
+        data:
+        {
+            Email: ""
+        },
+        methods:
+        {
+            // 寄送驗證碼
+            SendMailToken: function() {
+                var self = this;
+                fetch(`/api/ForgotPwd/SendMailToken?email=${self.Email}`)
+                    .then(function(response) {
+                        console.log("response = ", response);
+                        return response.text();
+                    })
+                    .then(function(res) {
+                        console.log("res = ", res);
+                        if (res == "true") {
+                            swal({
+                                title: '寄送驗證信',
+                                text: '驗證信已寄送，請至信箱確認',
+                                type: 'success',
+                                closeOnClickOutside: false,
+                                icon: "success",
+                                button: "確定"
+                            }).then(() => {
+                                location.reload();
+                            });
+                            setTimeout("location.reload()", 5000)
+                        }
+                        else {
+                            swal({
+                                title: '查無此信箱',
+                                text: '請重新確認輸入信箱是否正確',
+                                type: 'warning',
+                                closeOnClickOutside: false,
+                                icon: "warning",
+                                button: "確定"
+                            })
+                        }
+                    });
+            }
+        }
+    }).$mount('#modalUserForgotPassword');
+    //廠商忘記密碼
+    var forgotCmpPass = new Vue({
+        data:
+        {
+            Email: ""
+        },
+        methods:
+        {
+            // 寄送驗證碼
+            SendMailToken: function() {
+                var self = this;
+                fetch(`/api/ForgotCmpPwd/SendMailToken/${self.Email}`)
+                    .then(function(response) {
+                        console.log("response = ", response);
+                        return response.text();
+                    })
+                    .then(function(res) {
+                        console.log("res = ", res);
+                        if (res == "true") {
+                            swal({
+                                title: '寄送驗證信',
+                                text: '驗證信已寄送，請至信箱確認',
+                                type: 'success',
+                                closeOnClickOutside: false,
+                                icon: "success",
+                                button: "確定"
+                            }).then(() => {
+                                location.reload();
+                            });
+                            setTimeout("location.reload()", 5000)
+                        }
+                        else {
+                            swal({
+                                title: '查無此信箱',
+                                text: '請重新確認輸入信箱是否正確',
+                                type: 'warning',
+                                closeOnClickOutside: false,
+                                icon: "warning",
+                                button: "確定"
+                            })
+                        }
+                    });
+            }
+        }
+    }).$mount('#modalOwnerForgotPassword');
+    //購物車
+    if ("@User.Claims.FirstOrDefault(X => X.Type == ClaimTypes.Role)?.Value" == "Member" || "@User.Claims.FirstOrDefault(X => X.Type == ClaimTypes.Role)?.Value" == "Admin") {
+        var ShopCar = new Vue({
+            el: '#shoppingCart',
+            data: {
+                ShopCarList: [],
+                NewCount: {
+                    ProductId: "",
+                    Count: ""
+                }
+            },
+            methods: {
+                reLoadData: function() {
+                    var self = this;
+                    fetch("/api/ShoppingCar/GetShopCarList")
+                        .then(res => res.json())
+                        .then(result => {
+                            //console.log(result);
+                            self.ShopCarList = result;
+                        }).catch(err => { })
+
+                },
+                RemoveData: function(index) {
+                    var self = this;
+                    var DelProductId = this.ShopCarList[index].shopCarId;
+                    fetch(`/api/ShoppingCar/RemoveShopCar/${DelProductId}`, {
+                        method: "Delete"
+                    })
+                        .then(res => res.json())
+                        .then(result => {
+                            console.log(result);
+                            if (result) {
+                                self.reLoadData();
+                            }
+                        })
+                },
+                AddCount: function(item) {
+                    item.count += 1;
+                    if (item.count > item.unitsInStock) {
+                        item.count--;
+                        OverStockWarn();
+                        return;
+                    }
+                    this.NewCount = {
+                        ProductId: item.shopCarId,
+                        Count: item.count
+                    };
+                    this.SaveShopCarCount();
+                },
+                ReductCount: function(item) {
+                    if (item.count > 1) {
+                        item.count -= 1;
+                    }
+                    this.NewCount = {
+                        ProductId: item.shopCarId,
+                        Count: item.count
+                    };
+                    this.SaveShopCarCount();
+                },
+                ChangeCount: function(e, index) {
+                    var PurCount = e.target.value;
+                    if (PurCount < 1) {
+                        PurCount = 1;
+                    } else if (isNaN(PurCount)) {
+                        e.target.value = this.ShopCarList[index].count;
+                        return;
+                    } else if (PurCount > this.ShopCarList[index].unitsInStock) {
+                        PurCount = this.ShopCarList[index].unitsInStock;
+                        OverStockWarn();
+                    }
+                    this.NewCount = {
+                        ProductId: this.ShopCarList[index].shopCarId,
+                        Count: PurCount
+                    };
+                    this.SaveShopCarCount();
+                    this.reLoadData();
+                },
+                SaveShopCarCount: function() {
+                    var self = this;
+                    fetch("/api/ShoppingCar/ChangeShopCarCount", {
+                        method: "Put",
+                        body: JSON.stringify(self.NewCount),
+                        headers: new Headers({
+                            'Content-Type': 'application/json'
+                        })
+                    }).then(res => res.json())
+                        .then(result => {
+                            if (result) {
+                            }
+                        })
+                }
+            },
+            mounted: function() {
+                this.reLoadData();
+            }
+        })
+    }
+    function OverStockWarn() {
+        swal({
+            title: '商品庫存量不足',
+            type: 'warning',
+            closeOnClickOutside: false,
+            icon: "warning",
+            button: false,
+            timer: 1000
+        })
+    };
+</script>
+
+<script src="~/lib/jquery/dist/jquery.min.js"></script>
+</html>

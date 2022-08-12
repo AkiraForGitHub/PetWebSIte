@@ -1,0 +1,267 @@
+﻿@section Styles{
+    <link rel="stylesheet" href="~/css/AaronCSS/index.css" />
+    <link rel="stylesheet" href="~/lib/font-awesome/css/all.min.css" />
+    <style>
+        @@media screen and (max-width: 550px) {
+            .pagination {
+                --bs-pagination-padding-x: 3.3px;
+                --bs-pagination-padding-y: 5px;
+            }
+        }
+    </style>
+}
+
+    <div id="Rest" v-cloak>
+        <!-- Jumbotron -->
+        <div class="container">
+            <div class="row">
+                <div class="jumbotron bg-light mt-2">
+                    <div class="container">
+                        <h1 class="display-4" style="font-weight: 900;text-align: center;">寵物友善餐廳</h1>
+                        <p style="font-weight: 900;text-align: -webkit-center;font-size: 1.25rem;">
+                            歡迎來到寵物友善餐廳，這裡收錄了"新北市"與"臺北市"的友善餐廳，歡迎預約訂位唷!!
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <!--麵包屑-->
+        <div class="container">
+            <nav aria-label="breadcrumb" style="--bs-breadcrumb-divider: url(&#34;data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='8' height='8'%3E%3Cpath d='M2.5 0L1 1.5 3.5 4 1 6.5 2.5 8l4-4-4-4z' fill='currentColor'/%3E%3C/svg%3E&#34;);">
+                <ol class="breadcrumb">
+                    <li class="breadcrumb-item"><a href="~/Home/Index" style="text-decoration:none;">首頁</a></li>
+                    <li class="breadcrumb-item">
+                        <a href="~/Restaurants/Restaurant" id="bread"
+                       style="text-decoration:none;">寵物友善餐廳</a>
+                    </li>
+                </ol>
+            </nav>
+        </div>
+        <!-- 關鍵字查詢 -->
+        <div class="container d-flex justify-content-end">
+            <div class="row">
+                <div class=" ">
+                    <div>
+                        <div class="  col-12">
+                            <div class="col-12 me-1">
+                                <input type="text" placeholder="請輸入關鍵字.." class="form-control mb-2 me-1" v-model="search"
+                                   v-on:change="searchKey">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <!-- 分頁 -->
+        <div class="container d-flex justify-content-center">
+            <div class="row">
+                <div class="col">
+                    <paginate :page-count="totalPages" :click-handler="pageChange" :prev-text="'▲'" :next-text="'▼'"
+                          :page-range="10"
+                          :container-Class="'pagination'"
+                          :page-link-class="'page-link'"
+                          :prev-class="'page-item'"
+                          :next-class="'page-item'"
+                          :prev-link-class="'page-link'"
+                          :next-link-class="'page-link'"
+                          :page-class="'page-item'">
+                    </paginate>
+                </div>
+            </div>
+        </div>
+        <!-- 依...搜尋... -->
+        <div class="container">
+            <div class=" ">
+                <div class="row d-flex justify-content-center">
+                    <div class="col-4">
+                        <select class="form-control" autocomplete="off" v-on:change="cheCity($event)">
+                            <option value="" selected disabled>請選擇城市</option>
+                            <option v-for="(item,index) in items" v-bind:value="index">
+                                {{item.CityName}}
+                            </option>
+                        </select>
+                    </div>
+                    <div class="col-4">
+                        <select class="form-control" v-model="selected.area">
+                            <option value="" selected disabled>請選擇地區</option>
+                            <option v-for="region in regions" v-bind:value="region.AreaName">
+                                {{region.AreaName}}
+                            </option>
+                        </select>
+                    </div>
+                    <div class="col-3">
+                        <button class="btn btn-primary" v-on:click="Qry">查詢</button>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+
+        <!-- Card-->
+        <div class="container mt-3">
+            <div class="row  row-cols-sm-1 row-cols-lg-2 row-cols-md-2 row-cols-xl-3" id="cardBody">
+                <div id="inCard" v-for="(card,index) in filterRest" v-if="isShow">
+                    <div class="card h-100" id="cardContent">
+                        <a :href="`RestaurantDetails/${card.restaurantId}`">
+                            <img :src="`/images/Restaurant/${card.photoPath}`" class="cardImgTop">
+                        </a>
+                        <div class="card-body">
+                            <h4 class="card-title" v-html="highLight(card.restaurantName)" id="cardRestName">
+                                <i class="fa-solid fa-utensils"></i> {{card.restaurantName}}
+                            </h4>
+                            <p class="card-text"><i class="fa-solid fa-phone-volume"></i> {{card.phone}}</p>
+                            <div class="mb-2">
+                                <i class="fa-solid fa-location-dot"></i>
+                                <b class="card-text" v-html="highLight(card.city)">
+                                    {{card.city}}
+                                </b>
+                                <b class="card-text" v-html="highLight(card.region)">
+                                    {{card.region}}
+                                </b>
+                                <b class="card-text" v-html="highLight(card.address)">
+                                    {{card.address}}
+                                </b>
+                            </div>
+                            <p class="card-text" style="color: red;">
+                                營業時間: {{card.busyTime}}
+                            </p>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </div>
+    @section Scripts{
+    <script src="~/js/CityRegion.js"></script>
+    <script src="https://unpkg.com/vuejs-paginate@latest"></script>
+    <script>
+        Vue.component('paginate', VuejsPaginate)
+        var app = new Vue({
+
+            data: {
+                items: [],
+                isShow: true,
+                pageItem: 3,
+                regions: [],
+                total: {},
+                currentPage: 1,
+                selected: {
+                    city: '',
+                    area: '',
+                },
+                search: ''
+            },
+            computed: {
+                totalPages: function() {
+                    return Math.ceil(this.total.length / this.pageItem);
+                },
+                filterRest: function() {
+                    var max = this.currentPage * this.pageItem;
+                    var min = max - this.pageItem;
+                    return this.total.slice(min, max);
+                }
+            },
+            methods: {
+                Qry: async function(ctrl) {
+                    let that = this;
+                    var a = await that.QryCityRegion()
+                    return a;
+                },
+                QryCityRegion: function() {
+                    let that = this;
+                    let url = `/api/RestaurantsApi/QryByCityRegion/${that.selected.city}/${that.selected.area}/rawdata`
+                    if (that.selected.area === "") {
+                        axios.get(`/api/RestaurantsApi/QryByCityRegion/${that.selected.city}/rawdata`)
+                            .then(res => {
+                                console.log(res)
+                                this.total = res.data;
+                                this.isShow = true;
+                                console.log("載到囉!!城市查詢");
+                                if (that.isShow === true) {
+                                    that.isShow2 = false;
+                                }
+                            })
+                            .catch(err => {
+                                console.error(err);
+                            })
+                    }
+                    else {
+                        axios.get(url)
+                            .then(res => {
+                                console.log(res)
+                                this.total = res.data;
+                                this.isShow = true;
+                                console.log("載到囉!!複合查詢");
+                            })
+                            .catch(err => {
+                                console.error(err);
+                            })
+                    }
+                },
+                cheCity: function(event) {
+                    let that = this;
+                    console.log(event);
+                    that.regions = that.items[event.target.value].AreaList;
+                    if (event.target.value === '0') {
+                        that.selected.city = '臺北市';
+
+                    }
+                    if (event.target.value === '2') {
+                        that.selected.city = '新北市';
+                    }
+                    that.selected.area = '';
+                },
+                searchKey: async function() {
+                    let that = this;
+                    let url = '/api/RestaurantsApi/Search/rawdata';
+
+                    await axios.get(url, { params: { key: `${that.search}` } })
+                        .then(res => {
+                            console.log(res)
+                            that.total = res.data;
+                            that.isShow = true;
+                        })
+                        .catch(err => {
+                            console.error(err);
+                        })
+                },
+                highLight: function(title) {
+                    if (title.includes(this.search)) {
+                        title = title.replace(
+                            this.search,
+
+                            '<font style="color:red!important;">' + this.search + '</font>'
+                        )
+                        return title
+                    }
+                    else {
+                        return title
+                    }
+                },
+                pageChange: function(currentPage) {
+                    this.currentPage = currentPage;
+                }
+
+            },
+            mounted: async function() {
+                console.log('掛載完成');
+                let that = this;
+                that.items = JSON.parse(cityRegionSource);
+
+                await axios.get("/api/RestaurantsApi/Details/rawdata")
+                    .then(res => {
+                        console.log(res)
+                        that.total = res.data;
+
+                    })
+                    .catch(err => {
+                        console.error(err);
+                    })
+
+            }
+        });
+        app.$mount('#Rest')
+
+    </script>
+}
